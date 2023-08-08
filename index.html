@@ -1,0 +1,138 @@
+<head>
+	<title>networking.ts</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="title" content="networking.ts">
+	<meta name="description" content="Demo of networking.ts library">
+	<meta name="keywords" content="react,nodejs,fetch,http,angular,typescript,vue,svelte,httpclient,sveltekit">
+	<meta property="og:title" content="networking.ts">
+	<meta property="og:description" content="Demo of networking.ts library">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://freitzzz.github.io/demo-networking-ts">
+	<meta property="og:site_name" content="networking.ts">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="networking.ts">
+	<meta name="twitter:description" content="Demo of networking.ts library">
+	<meta itemprop="name" content="networking.ts">
+	<meta itemprop="description" content="Demo of networking.ts library">
+	<meta name="referrer" content="no-referrer-when-downgrade">
+
+	<link rel="shortcut icon" href="favicon.png">
+	<link href="dist/output.css" rel="stylesheet" />
+
+	<script type="module" defer>
+		import { RawGitHubNetworkingClient, RelayProxyNetworkingClient, RelayProxyConfiguration, ImageHttpResponse } from 'https://unpkg.com/@web-pacotes/networking/dist/index.mjs';
+
+		window.retrieveFileContent = async function retrieveFileContent() {
+			const owner = document.getElementById('repo-owner').value;
+			const name = document.getElementById('repo-name').value;
+			const ref = document.getElementById('repo-ref').value;
+			const filePath = document.getElementById('repo-file').value;
+
+			const fetch = window.fetch.bind(window);
+
+			const client = new RawGitHubNetworkingClient({
+				repository: {
+					owner: owner,
+					repo: name,
+					ref: ref,
+				},
+				fetchClient: fetch,
+			});
+
+			const relayProxyClient = new RelayProxyNetworkingClient({
+				configuration: new RelayProxyConfiguration({
+					client: client,
+					url: new URL('https://relay-worker.bolinhas-hihi.workers.dev/'),
+					bypassExposeBody: false,
+					bypassExposeHeaders: false,
+				}),
+				fetchClient: fetch,
+			});
+
+			const result = await relayProxyClient.get({ endpoint: filePath });
+
+			if (result.tag === 'left') {
+				document.getElementById('result').innerText = JSON.stringify(result.value, null, 2);
+
+				return;
+			}
+
+			const body = await result.value.body.get();
+
+			if (result.value instanceof ImageHttpResponse) {
+				const reader = new FileReader();
+				reader.readAsDataURL(body);
+
+				reader.onloadend = function () {
+					document.getElementById("result-img").src = reader.result;
+					document.getElementById('result-img').hidden = false;
+					document.getElementById('result-text').hidden = true;
+				}
+			} else {
+				document.getElementById('result-text').innerText = body;
+				document.getElementById('result-text').hidden = false;
+				document.getElementById('result-img').hidden = true;
+			}
+
+		}
+	</script>
+</head>
+
+<body class="background">
+	<span class="badge badge-flat-warning rotate-45 sticky top-4 left-full">
+		<a href="https://github.com/web-pacotes/networking.ts" target="_blank">DEMO :)</a>
+	</span>
+
+	<div class="mx-auto flex w-full max-w-sm flex-col gap-6">
+		<div class="flex flex-col items-center">
+			<h1 class="text-3xl font-semibold">networking.ts</h1>
+			<p class="text-sm">Fill in the details of a GitHub repository</p>
+		</div>
+		<div class="form-group">
+			<div class="form-field">
+				<label class="form-label">Repository Owner</label>
+
+				<input id="repo-owner" placeholder="Type here" type="text" class="input max-w-full" />
+				<label class="form-label">
+					<span class="form-label-alt">(e.g., web-pacotes)</span>
+				</label>
+			</div>
+			<div class="form-field">
+				<label class="form-label">Repository Name</label>
+
+				<input id="repo-name" placeholder="Type here" type="text" class="input max-w-full" />
+				<label class="form-label">
+					<span class="form-label-alt">(e.g., networking.ts)</span>
+				</label>
+			</div>
+			<div class="form-field">
+				<label class="form-label">Branch/Ref</label>
+
+				<input id="repo-ref" placeholder="Type here" type="text" class="input max-w-full" value="master" />
+			</div>
+			<div class="form-field">
+				<label class="form-label">File to Retrieve</label>
+
+				<input id="repo-file" placeholder="Type here" type="text" class="input max-w-full" value="README.md" />
+			</div>
+			<div class="form-field pt-5">
+				<div class="form-control justify-between">
+					<button type="button" class="btn btn-primary w-full" onclick="retrieveFileContent()">
+						Retrieve Content
+					</button>
+				</div>
+			</div>
+
+			<div class="form-field pt-5">
+				<div class="form-control justify-between">
+					<p id="result-text" class="text-center text-lg">
+					</p>
+					<img id="result-img" class="border-4 border-dotted" alt="you should've have seen an image here..."
+						hidden>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>

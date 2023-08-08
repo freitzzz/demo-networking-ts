@@ -1,0 +1,19 @@
+{
+	"name": "networking-example-web",
+	"version": "0.0.0",
+	"description": "Example web project to test networking",
+	"main": "dist/index.js",
+	"module": "dist/index.cjs",
+	"types": "dist/index.d.ts",
+	"sideEffects": false,
+	"author": "web-pacotes",
+	"license": "none",
+	"dependencies": {
+		"networking": "file:../",
+		"rippleui": "^1.12.1"
+	},
+	"devDependencies": {
+		"tailwindcss": "^3.3.3",
+		"@freitzzz/gh-pagez": "5.0.1"
+	}
+}
