@@ -28,7 +28,9 @@
 			RawGitHubNetworkingClient,
 			RelayProxyNetworkingClient,
 			RelayProxyConfiguration,
-			ImageHttpResponse
+			isImageResponse,
+			isLeft,
+			extract,
 		} from 'https://unpkg.com/@web-pacotes/networking/dist/index.mjs';
 
 		window.retrieveFileContent = async function retrieveFileContent() {
@@ -60,7 +62,7 @@
 
 			const result = await relayProxyClient.get({ endpoint: filePath, cache: 'no-cache', cors: 'cors' });
 
-			if (result.tag === 'left') {
+			if (isLeft(result)) {
 				document.getElementById('result').innerText = JSON.stringify(
 					result.value,
 					null,
@@ -70,7 +72,8 @@
 				return;
 			}
 
-			const body = await result.value.body.get();
+			const response = result.value;
+			const body = extract(result.body)
 
 			if (result.value instanceof ImageHttpResponse) {
 				const reader = new FileReader();
